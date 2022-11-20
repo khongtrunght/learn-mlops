@@ -25,5 +25,3 @@ EXPOSE 8000
 
 # Start app
 ENTRYPOINT ["gunicorn", "-c", "app/gunicorn.py", "-k", "uvicorn.workers.UvicornWorker", "app.api:app"]
-
-

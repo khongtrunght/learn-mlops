@@ -106,7 +106,7 @@ def preprocess(df: pd.DataFrame, lower: bool, stem: bool, min_freq: int) -> pd.D
     return df
 
 
-class LabelEncoder(object):
+class LabelEncoder:
     """Encode labels into unique indices.
 
     ```python
@@ -197,7 +197,7 @@ class LabelEncoder(object):
         Returns:
             LabelEncoder instance.
         """
-        with open(fp, "r") as fp:
+        with open(fp) as fp:
             kwargs = json.load(fp=fp)
         return cls(**kwargs)
 
