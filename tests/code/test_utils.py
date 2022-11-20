@@ -14,6 +14,7 @@ def test_save_and_load_dict():
         d = utils.load_dict(filepath=fp)
         assert d["hello"] == "world"
 
+
 def test_set_seeds():
     utils.set_seeds()
     a = np.random.randn(2, 3)

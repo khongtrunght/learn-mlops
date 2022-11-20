@@ -13,3 +13,5 @@ snorkel==0.9.8
 streamlit==1.10.0
 typer==0.4.1
 uvicorn==0.17.6
+importlib-metadata==4.13.0
+dvc==2.10.2

@@ -13,7 +13,7 @@ from config import config
 stemmer = PorterStemmer()
 
 
-def clean_text(text: str, lower: str = True, stem: bool =False, stopwords=config.STOPWORDS) -> str:
+def clean_text(text: str, lower: str = True, stem: bool = False, stopwords=config.STOPWORDS) -> str:
     """Clean raw text.
 
     Args:
@@ -48,7 +48,9 @@ def clean_text(text: str, lower: str = True, stem: bool =False, stopwords=config
     return text
 
 
-def replace_oos_labels(df: pd.DataFrame, labels: List, label_col: str, oos_label: str = "other") -> pd.DataFrame:
+def replace_oos_labels(
+    df: pd.DataFrame, labels: List, label_col: str, oos_label: str = "other"
+) -> pd.DataFrame:
     """Replace out of scope (OSS) labels.
 
     Args:
@@ -65,7 +67,9 @@ def replace_oos_labels(df: pd.DataFrame, labels: List, label_col: str, oos_label
     return df
 
 
-def replace_minority_labels(df: pd.DataFrame, label_col: str, min_freq: int, new_label: str = "other") -> pd.DataFrame:
+def replace_minority_labels(
+    df: pd.DataFrame, label_col: str, min_freq: int, new_label: str = "other"
+) -> pd.DataFrame:
     """Replace minority labels with another label.
 
     Args:

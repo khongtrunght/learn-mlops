@@ -1,5 +1,6 @@
 from pathlib import Path
-from setuptools import setup, find_namespace_packages
+
+from setuptools import find_namespace_packages, setup
 
 # Load package from requirements.txt
 BASE_DIR = Path(__file__).parent
@@ -29,7 +30,7 @@ setup(
     packages=find_namespace_packages(),
     install_requires=[required_packages],
     extras_require={
-        "dev": docs_packages + style_packages + test_packages,
+        "dev": docs_packages + style_packages + test_packages + ["pre-commit==2.19.0"],
         "docs": docs_packages,
     },
 )

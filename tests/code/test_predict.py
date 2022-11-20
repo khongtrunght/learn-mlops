@@ -3,6 +3,7 @@ import pytest
 
 from tagifai import predict
 
+
 @pytest.mark.parametrize(
     "threshold, y_pred",
     [

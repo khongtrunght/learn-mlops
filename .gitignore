@@ -1,6 +1,8 @@
 # Data
 logs/
 stores/
+mlruns/
+
 
 # VSCode
 .vscode/

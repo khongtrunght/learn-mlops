@@ -9,7 +9,7 @@ help:
 
 .PHONY: style
 style:
-	black .
+	black . --exclude venv
 	flake8
 	python3 -m isort .
 
@@ -37,4 +37,9 @@ test:
 	cd tests && great_expectations checkpoint run tags
 	cd tests && great_expectations checkpoint run labeled_projects
 
-
+.PHONY: dvc
+dvc:
+	dvc add data/projects.csv
+	dvc add data/tags.csv
+	dvc add data/labeled_projects.csv
+	dvc push

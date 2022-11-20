@@ -2,10 +2,10 @@ import json
 from argparse import Namespace
 from typing import Dict
 
-
+import mlflow
 import numpy as np
-import pandas as pd
 import optuna
+import pandas as pd
 from imblearn.over_sampling import RandomOverSampler
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import SGDClassifier
@@ -15,13 +15,16 @@ from config.config import logger
 from tagifai import data, evaluate, predict, utils
 
 
-def train(args: Namespace, df: pd.DataFrame, trial =None) -> Dict:
+def train(args: Namespace, df: pd.DataFrame, trial: optuna.trial._trial.Trial = None) -> Dict:
     """Train model on data.
 
     Args:
         args (Namespace): arguments to use for training.
         df (pd.DataFrame): data for training.
-        trial (_type_, optional): optimization trial. Defaults to None.
+        trial (optuna.trial._trial.Trial, optional): optimization trial. Defaults to None.
+
+    Raises:
+        optuna.TrialPruned: early stopping of trial if it's performing poorly.
 
     Returns:
         Dict: artifacts from the run.
@@ -32,7 +35,7 @@ def train(args: Namespace, df: pd.DataFrame, trial =None) -> Dict:
     if args.shuffle:
         df = df.sample(frac=1).reset_index(drop=True)
     df = df[: args.subset]  # None = all samples
-    df = data.preprocess(df=df, lower=args.lower, stem=args.stem, min_freq=args.min_freq)
+    df = data.preprocess(df, lower=args.lower, stem=args.stem, min_freq=args.min_freq)
     label_encoder = data.LabelEncoder().fit(df.tag)
     X_train, X_val, X_test, y_train, y_val, y_test = data.get_data_splits(
         X=df.text.to_numpy(), y=label_encoder.encode(df.tag)
@@ -40,7 +43,9 @@ def train(args: Namespace, df: pd.DataFrame, trial =None) -> Dict:
     test_df = pd.DataFrame({"text": X_test, "tag": label_encoder.decode(y_test)})
 
     # Tf-idf
-    vectorizer = TfidfVectorizer(analyzer=args.analyzer, ngram_range=(2, args.ngram_max_range))
+    vectorizer = TfidfVectorizer(
+        analyzer=args.analyzer, ngram_range=(2, args.ngram_max_range)
+    )  # char n-grams
     X_train = vectorizer.fit_transform(X_train)
     X_val = vectorizer.transform(X_val)
     X_test = vectorizer.transform(X_test)
@@ -61,21 +66,32 @@ def train(args: Namespace, df: pd.DataFrame, trial =None) -> Dict:
         warm_start=True,
     )
 
-    # train
+    # Training
     for epoch in range(args.num_epochs):
         model.fit(X_over, y_over)
         train_loss = log_loss(y_train, model.predict_proba(X_train))
         val_loss = log_loss(y_val, model.predict_proba(X_val))
         if not epoch % 10:
-            print(
+            logger.info(
                 f"Epoch: {epoch:02d} | "
-                f"train_loss: {train_loss:.5f} | "
+                f"train_loss: {train_loss:.5f}, "
                 f"val_loss: {val_loss:.5f}"
             )
 
+        # Log
+        if not trial:
+            mlflow.log_metrics({"train_loss": train_loss, "val_loss": val_loss}, step=epoch)
+
+        # Pruning (for optimization in next section)
+        if trial:  # pragma: no cover, optuna pruning
+            trial.report(val_loss, epoch)
+            if trial.should_prune():
+                raise optuna.TrialPruned()
+
+    # Threshold
     y_pred = model.predict(X_val)
     y_prob = model.predict_proba(X_val)
-    args.threshold = np.quantile([y_prob[i][j] for i, j in enumerate(y_pred)], q=0.25)
+    args.threshold = np.quantile([y_prob[i][j] for i, j in enumerate(y_pred)], q=0.25)  # Q1
 
     # Evaluation
     other_index = label_encoder.class_to_index["other"]
@@ -93,12 +109,15 @@ def train(args: Namespace, df: pd.DataFrame, trial =None) -> Dict:
         "performance": performance,
     }
 
+
 def objective(args: Namespace, df: pd.DataFrame, trial: optuna.trial._trial.Trial) -> float:
     """Objective function for optimization trials.
+
     Args:
         args (Namespace): arguments to use for training.
         df (pd.DataFrame): data for training.
         trial (optuna.trial._trial.Trial, optional): optimization trial.
+
     Returns:
         float: metric value to be used for optimization.
     """

@@ -5,11 +5,13 @@ import pytest
 from config import config
 from tagifai import main, predict
 
+
 @pytest.fixture(scope="module")
 def artifacts():
     run_id = open(Path(config.CONFIG_DIR, "run_id.txt")).read()
     artifacts = main.load_artifacts(run_id=run_id)
     return artifacts
+
 
 @pytest.mark.parametrize(
     "text, tag",
@@ -29,6 +31,7 @@ def test_inv(text, tag, artifacts):
     predicted_tag = predict.predict(texts=[text], artifacts=artifacts)[0]["predicted_tag"]
     assert tag == predicted_tag
 
+
 @pytest.mark.parametrize(
     "text, tag",
     [
@@ -43,7 +46,7 @@ def test_inv(text, tag, artifacts):
         (
             "CNNs for text classification.",
             "natural-language-processing",
-        )
+        ),
     ],
 )
 def test_dir(text, tag, artifacts):

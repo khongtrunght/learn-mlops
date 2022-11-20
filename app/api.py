@@ -1,9 +1,10 @@
-from fastapi import FastAPI, Request
-from http import HTTPStatus
-from typing import Dict
 from datetime import datetime
 from functools import wraps
+from http import HTTPStatus
 from pathlib import Path
+from typing import Dict
+
+from fastapi import FastAPI, Request
 
 from app.schemas import PredictPayload
 from config import config
@@ -11,10 +12,11 @@ from config.config import logger
 from tagifai import main, predict
 
 app = FastAPI(
-        title="TagIfAI - Made With khongtrunght",
-        description="Classify machine learning project.",
-        version="0.1",
-        )
+    title="TagIfAI - Made With khongtrunght",
+    description="Classify machine learning project.",
+    version="0.1",
+)
+
 
 @app.on_event("startup")
 def load_artifacts():
@@ -27,21 +29,22 @@ def load_artifacts():
 
 def construct_response(f):
     """Construct a JSON rsponse for an endpoint."""
+
     @wraps(f)
     def wrap(request: Request, *args, **kwargs) -> Dict:
         results = f(request, *args, **kwargs)
         response = {
-            "message": results['message'],
+            "message": results["message"],
             "method": request.method,
-            "status-code": results['status-code'],
+            "status-code": results["status-code"],
             "timestamp": datetime.now().isoformat(),
             "url": request.url._url,
         }
         if "data" in results:
             response["data"] = results["data"]
         return response
-    return wrap
 
+    return wrap
 
 
 @app.get("/", tags=["General"])
@@ -49,11 +52,12 @@ def construct_response(f):
 def _index(request: Request) -> Dict:
     """Health check."""
     response = {
-            "message": HTTPStatus.OK.phrase,
-            "status-code": HTTPStatus.OK,
-            "data": {},
-            }
+        "message": HTTPStatus.OK.phrase,
+        "status-code": HTTPStatus.OK,
+        "data": {},
+    }
     return response
+
 
 @app.get("/performance", tags=["Performance"])
 @construct_response
@@ -67,6 +71,7 @@ def _performance(requiest: Request, filter: str = None) -> Dict:
         "data": data,
     }
     return response
+
 
 @app.get("/args", tags=["Arguments"])
 @construct_response

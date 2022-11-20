@@ -7,36 +7,36 @@ import pytest
 
 from tagifai import data
 
+
 @pytest.fixture(scope="module")
 def df():
     data = [
-        {"title" : "a0", "description": "b0", "tag": "c0"},
-        {"title" : "a1", "description": "b1", "tag": "c1"},
-        {"title" : "a2", "description": "b2", "tag": "c1"},
-        {"title" : "a3", "description": "b3", "tag": "c2"},
-        {"title" : "a4", "description": "b4", "tag": "c2"},
-        {"title" : "a5", "description": "b5", "tag": "c2"},
+        {"title": "a0", "description": "b0", "tag": "c0"},
+        {"title": "a1", "description": "b1", "tag": "c1"},
+        {"title": "a2", "description": "b2", "tag": "c1"},
+        {"title": "a3", "description": "b3", "tag": "c2"},
+        {"title": "a4", "description": "b4", "tag": "c2"},
+        {"title": "a5", "description": "b5", "tag": "c2"},
     ]
     df = pd.DataFrame(data * 10)
     return df
 
+
 @pytest.mark.parametrize(
     "labels, unique_labels",
     [
-        ([], ["other"]), # no set of approved labels
-        (["c3"], ["other"]), # no overlap b/w approved/actual labels
-        (["c0"], ["c0", "other"]), # partial overlap
-        (["c0", "c1", "c2"], ["c0", "c1", "c2"]), # complete overlap
-    ]
+        ([], ["other"]),  # no set of approved labels
+        (["c3"], ["other"]),  # no overlap b/w approved/actual labels
+        (["c0"], ["c0", "other"]),  # partial overlap
+        (["c0", "c1", "c2"], ["c0", "c1", "c2"]),  # complete overlap
+    ],
 )
 def test_replace_oos_labels(df, labels, unique_labels):
     replaced_df = data.replace_oos_labels(
-        df=df.copy(),
-        labels=labels,
-        label_col="tag",
-        oos_label="other"
+        df=df.copy(), labels=labels, label_col="tag", oos_label="other"
     )
     assert set(replaced_df["tag"].unique()) == set(unique_labels)
+
 
 @pytest.mark.parametrize(
     "min_freq, unique_labels",
@@ -46,7 +46,7 @@ def test_replace_oos_labels(df, labels, unique_labels):
         (2 * 10, ["other", "c1", "c2"]),
         (3 * 10, ["other", "c2"]),
         (4 * 10, ["other"]),
-    ]
+    ],
 )
 def test_replace_minority_labels(df, min_freq, unique_labels):
     replaced_df = data.replace_minority_labels(
@@ -67,12 +67,7 @@ def test_replace_minority_labels(df, min_freq, unique_labels):
     ],
 )
 def test_clean_text(text, lower, stem, stopwords, cleaned_text):
-    assert (
-        data.clean_text(
-            text=text, lower=lower, stem=stem, stopwords=stopwords
-        )
-        == cleaned_text
-    )
+    assert data.clean_text(text=text, lower=lower, stem=stem, stopwords=stopwords) == cleaned_text
 
 
 def test_preprocess(df):
@@ -106,7 +101,7 @@ class TestLabelEncoder:
         assert len(label_encoder.classes) == 0
 
     def test_dict_init(self):
-        class_to_index = {"apple": 0, "banana":1}
+        class_to_index = {"apple": 0, "banana": 1}
         label_encoder = data.LabelEncoder(class_to_index=class_to_index)
         assert label_encoder.index_to_class == {0: "apple", 1: "banana"}
         assert len(label_encoder.classes) == 2
@@ -117,8 +112,8 @@ class TestLabelEncoder:
     def test_save_and_load(self):
         with tempfile.TemporaryDirectory() as dp:
             fp = Path(dp, "label_encoder.json")
-            self.label_encoder.save(fp = fp)
-            label_encoder = data.LabelEncoder.load(fp = fp)
+            self.label_encoder.save(fp=fp)
+            label_encoder = data.LabelEncoder.load(fp=fp)
             assert len(label_encoder.classes) == 0
 
     def test_str(self):
@@ -132,7 +127,7 @@ class TestLabelEncoder:
         assert len(label_encoder.classes) == 2
 
     def test_encode_decode(self):
-        class_to_index = {"apple": 0, "banana":1}
+        class_to_index = {"apple": 0, "banana": 1}
         y_encoded = [0, 1, 0]
         y_decoded = ["apple", "banana", "apple"]
         label_encoder = data.LabelEncoder(class_to_index=class_to_index)
@@ -154,4 +149,3 @@ def test_get_data_splits(df):
     assert len(X_train) / float(len(df)) == pytest.approx(0.7, abs=0.05)  # 0.7 ± 0.05
     assert len(X_val) / float(len(df)) == pytest.approx(0.15, abs=0.05)  # 0.15 ± 0.05
     assert len(X_test) / float(len(df)) == pytest.approx(0.15, abs=0.05)  # 0.15 ± 0.05
-

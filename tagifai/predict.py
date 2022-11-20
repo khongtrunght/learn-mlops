@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-
 import numpy as np
 
 
@@ -41,4 +40,4 @@ def predict(texts: List, artifacts: Dict) -> List:
         }
         for i in range(len(tags))
     ]
-    return
+    return predictions
